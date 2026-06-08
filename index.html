@@ -47,35 +47,45 @@
   </a-scene>
 
   <script>
-    const video = document.querySelector('#miVideo');
-    const torchBtn = document.querySelector('#torchBtn');
-    let isTorchOn = false;
+  const video = document.querySelector('#miVideo');
+  const torchBtn = document.querySelector('#torchBtn');
+  let isTorchOn = false;
 
-    // Lógica Linterna
-    torchBtn.addEventListener('click', async () => {
+  // Lógica de Linterna
+  torchBtn.addEventListener('click', async () => {
+    try {
       const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
       const track = stream.getVideoTracks()[0];
       const capabilities = track.getCapabilities();
       if (capabilities.torch) {
         isTorchOn = !isTorchOn;
-        track.applyConstraints({advanced: [{torch: isTorchOn}]});
+        await track.applyConstraints({advanced: [{torch: isTorchOn}]});
         torchBtn.innerText = isTorchOn ? "Apagar" : "Linterna";
       }
-    });
+    } catch (e) { console.error("Linterna no disponible", e); }
+  });
 
-    // Reproducción Forzada
-    const sceneEl = document.querySelector('a-scene');
-    
-    // Si el video falla al iniciar, un toque en la pantalla lo activará
-    document.body.addEventListener('click', () => { video.play(); }, { once: true });
+  // --- SOLUCIÓN PARA EL CUADRO NEGRO ---
+  const sceneEl = document.querySelector('a-scene');
 
-    sceneEl.addEventListener("targetFound", () => {
-      video.play().catch(e => console.log("Esperando interacción del usuario para reproducir"));
+  function startVideo() {
+    video.muted = true;
+    video.play().then(() => {
+      console.log("Video reproducido con éxito");
+    }).catch(e => {
+      console.log("Esperando interacción para reproducir: ", e);
     });
-    
-    sceneEl.addEventListener("targetLost", () => {
-      video.pause();
-    });
-  </script>
+  }
+
+  // Intentamos reproducir al encontrar el marcador
+  sceneEl.addEventListener("targetFound", () => {
+    startVideo();
+  });
+
+  // INTENTO DE DESBLOQUEO: Si tocas cualquier parte de la pantalla, el video arranca
+  window.addEventListener('click', () => {
+    startVideo();
+  }, { once: true });
+</script>
 </body>
 </html>
