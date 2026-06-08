@@ -4,19 +4,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <style>
+    .ui-container { position: absolute; z-index: 1000; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
+    button { padding: 12px 20px; border-radius: 25px; border: none; background: rgba(0,0,0,0.6); color: white; font-family: sans-serif; cursor: pointer; }
+  </style>
 </head>
 <body>
-  <button id="flashlightBtn" style="position: absolute; z-index: 1000; bottom: 20px; left: 20px;">
-    Linterna
-  </button>
+
+  <div class="ui-container">
+    <button id="torchBtn">Linterna</button>
+    <a href="tu_video_optimizado.mp4" download="LegacyAR_Video.mp4">
+      <button>Descargar</button>
+    </a>
+  </div>
 
   <a-scene mindar-image="imageTargetSrc: ./targets.mind;" embedded renderer="colorManagement: true" device-orientation-permission-ui="enabled: false">
     <a-assets>
-      <video id="miVideo" src="tu_video.mp4" loop="true" playsinline crossorigin="anonymous"></video>
+      <video id="miVideo" src="tu_video_optimizado.mp4" loop="true" playsinline crossorigin="anonymous"></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
+    <!-- Tus 3 marcadores vinculados al mismo video -->
     <a-entity mindar-image-target="targetIndex: 0"></a-entity>
     <a-entity mindar-image-target="targetIndex: 1"></a-entity>
     <a-entity mindar-image-target="targetIndex: 2"></a-entity>
@@ -26,20 +35,23 @@
 
   <script>
     const video = document.querySelector('#miVideo');
-    const btn = document.querySelector('#flashlightBtn');
-    let track = null;
+    const torchBtn = document.querySelector('#torchBtn');
+    let isTorchOn = false;
 
-    // Lógica para la linterna (Torch)
-    btn.addEventListener('click', async () => {
+    // Lógica para la linterna
+    torchBtn.addEventListener('click', async () => {
       const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-      track = stream.getVideoTracks()[0];
+      const track = stream.getVideoTracks()[0];
       const capabilities = track.getCapabilities();
+      
       if (capabilities.torch) {
-        track.applyConstraints({advanced: [{torch: true}]});
+        isTorchOn = !isTorchOn;
+        track.applyConstraints({advanced: [{torch: isTorchOn}]});
+        torchBtn.innerText = isTorchOn ? "Apagar Luz" : "Linterna";
       }
     });
 
-    // Reproducir video al encontrar marcador
+    // Reproducción automática al detectar
     const sceneEl = document.querySelector('a-scene');
     sceneEl.addEventListener("targetFound", () => { video.play(); });
     sceneEl.addEventListener("targetLost", () => { video.pause(); });
