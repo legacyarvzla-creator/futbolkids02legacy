@@ -47,14 +47,15 @@
         const recordBtn = document.querySelector('#recordBtn');
 
         // Activación al encontrar el marcador
-        target.addEventListener("targetFound", () => {
-            video.muted = true; // Forzamos silencio para asegurar reproducción
-            video.play().catch(e => console.log("Requerida interacción"));
-        });
-
-        target.addEventListener("targetLost", () => {
-            video.pause();
-        });
+      target.addEventListener("targetFound", () => {
+    video.muted = true;
+    video.play().then(() => {
+        console.log("Reproducción iniciada");
+    }).catch(e => {
+        console.error("Error de reproducción:", e);
+        alert("Error de video: " + e.message);
+    });
+});
 
         // Grabación nativa de pantalla (la más estable)
         recordBtn.addEventListener('click', async () => {
