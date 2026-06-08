@@ -8,84 +8,49 @@
   <style>
     .ui-container { position: absolute; z-index: 1000; bottom: 30px; width: 100%; display: flex; justify-content: center; gap: 20px; }
     button { padding: 12px 20px; border-radius: 25px; border: none; background: rgba(0,0,0,0.6); color: white; font-family: sans-serif; cursor: pointer; }
-    a { text-decoration: none; }
   </style>
 </head>
 <body>
 
   <div class="ui-container">
     <button id="torchBtn">Linterna</button>
-    <a href="tu_video_optimizado.mp4" download="LegacyAR_Video.mp4">
-      <button>Descargar</button>
-    </a>
+    <a href="tu_video_optimizado.mp4" download="LegacyAR_Video.mp4"><button>Descargar</button></a>
   </div>
 
-  <a-scene 
-    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: yes;" 
-    color-space="sRGB" 
-    renderer="colorManagement: true, physicallyCorrectLights: true"
-    vr-mode-ui="enabled: false" 
-    device-orientation-permission-ui="enabled: false">
-
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: yes;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
     <a-assets>
-      <video id="miVideo" src="tu_video_optimizado.mp4" loop="true" playsinline crossorigin="anonymous" muted="true"></video>
+      <video id="miVideo" src="tu_video_optimizado.mp4" loop="true" playsinline crossorigin="anonymous" muted="true" autoplay></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-   <a-entity mindar-image-target="targetIndex: 0">
-  <a-video src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat"></a-video>
-</a-entity>
-
-<a-entity mindar-image-target="targetIndex: 1">
-  <a-video src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat"></a-video>
-</a-entity>
-
-<a-entity mindar-image-target="targetIndex: 2">
-  <a-video src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat"></a-video>
-</a-entity>
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat; src: #miVideo"></a-plane>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 1">
+      <a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat; src: #miVideo"></a-plane>
+    </a-entity>
+    <a-entity mindar-image-target="targetIndex: 2">
+      <a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat; src: #miVideo"></a-plane>
+    </a-entity>
   </a-scene>
 
   <script>
-  const video = document.querySelector('#miVideo');
-  const torchBtn = document.querySelector('#torchBtn');
-  let isTorchOn = false;
+    const video = document.querySelector('#miVideo');
+    const torchBtn = document.querySelector('#torchBtn');
 
-  // Lógica de Linterna
-  torchBtn.addEventListener('click', async () => {
-    try {
+    // Forzar inicio al tocar cualquier parte
+    window.addEventListener('click', () => {
+      video.play();
+    }, { once: true });
+
+    // Lógica linterna
+    torchBtn.addEventListener('click', async () => {
       const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
       const track = stream.getVideoTracks()[0];
-      const capabilities = track.getCapabilities();
-      if (capabilities.torch) {
-        isTorchOn = !isTorchOn;
-        await track.applyConstraints({advanced: [{torch: isTorchOn}]});
-        torchBtn.innerText = isTorchOn ? "Apagar" : "Linterna";
-      }
-    } catch (e) { console.error("Linterna no disponible", e); }
-  });
-
-  // --- SOLUCIÓN PARA EL CUADRO NEGRO ---
-  const sceneEl = document.querySelector('a-scene');
-
-  function startVideo() {
-    video.muted = true;
-    video.play().then(() => {
-      console.log("Video reproducido con éxito");
-    }).catch(e => {
-      console.log("Esperando interacción para reproducir: ", e);
+      const cap = track.getCapabilities();
+      if (cap.torch) track.applyConstraints({advanced: [{torch: true}]});
     });
-  }
-
-  // Intentamos reproducir al encontrar el marcador
-  sceneEl.addEventListener("targetFound", () => {
-    startVideo();
-  });
-
-  // INTENTO DE DESBLOQUEO: Si tocas cualquier parte de la pantalla, el video arranca
-  window.addEventListener('click', () => {
-    startVideo();
-  }, { once: true });
-</script>
+  </script>
 </body>
 </html>
