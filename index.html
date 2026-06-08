@@ -34,15 +34,15 @@
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0">
-      <a-video src="#miVideo" width="1" height="1.77" rotation="-90 0 0" position="0 0 0"></a-video>
+      <a-video src="#miVideo" width="1" height="1.77" rotation="-90 0 0" position="0 0 0" material="shader: flat"></a-video>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 1">
-      <a-video src="#miVideo" width="1" height="1.77" rotation="-90 0 0" position="0 0 0"></a-video>
+      <a-video src="#miVideo" width="1" height="1.77" rotation="-90 0 0" position="0 0 0" material="shader: flat"></a-video>
     </a-entity>
 
     <a-entity mindar-image-target="targetIndex: 2">
-      <a-video src="#miVideo" width="1" height="1.77" rotation="-90 0 0" position="0 0 0"></a-video>
+      <a-video src="#miVideo" width="1" height="1.77" rotation="-90 0 0" position="0 0 0" material="shader: flat"></a-video>
     </a-entity>
   </a-scene>
 
@@ -51,27 +51,28 @@
     const torchBtn = document.querySelector('#torchBtn');
     let isTorchOn = false;
 
-    // Lógica de Linterna
+    // Lógica Linterna
     torchBtn.addEventListener('click', async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-        const track = stream.getVideoTracks()[0];
-        const capabilities = track.getCapabilities();
-        if (capabilities.torch) {
-          isTorchOn = !isTorchOn;
-          await track.applyConstraints({advanced: [{torch: isTorchOn}]});
-          torchBtn.innerText = isTorchOn ? "Apagar Luz" : "Linterna";
-        }
-      } catch (err) {
-        console.error("No se pudo activar la linterna", err);
+      const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
+      const track = stream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities();
+      if (capabilities.torch) {
+        isTorchOn = !isTorchOn;
+        track.applyConstraints({advanced: [{torch: isTorchOn}]});
+        torchBtn.innerText = isTorchOn ? "Apagar" : "Linterna";
       }
     });
 
-    // Lógica de reproducción al detectar
+    // Reproducción Forzada
     const sceneEl = document.querySelector('a-scene');
+    
+    // Si el video falla al iniciar, un toque en la pantalla lo activará
+    document.body.addEventListener('click', () => { video.play(); }, { once: true });
+
     sceneEl.addEventListener("targetFound", () => {
-      video.play().catch(e => console.error("Error al reproducir", e));
+      video.play().catch(e => console.log("Esperando interacción del usuario para reproducir"));
     });
+    
     sceneEl.addEventListener("targetLost", () => {
       video.pause();
     });
