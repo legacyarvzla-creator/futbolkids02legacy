@@ -14,43 +14,52 @@
 
   <div class="ui-container">
     <button id="torchBtn">Linterna</button>
-    <a href="tu_video_optimizado.mp4" download="LegacyAR_Video.mp4"><button>Descargar</button></a>
+    <button id="recordBtn">Grabar</button>
   </div>
 
-  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: yes;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" renderer="colorManagement: true" vr-mode-ui="enabled: false">
     <a-assets>
-      <video id="miVideo" src="tu_video_optimizado.mp4" loop="true" playsinline crossorigin="anonymous" muted="true" autoplay></video>
+      <video id="miVideo" src="FUTBOLKIDS_legacy02.mp4" loop="true" playsinline crossorigin="anonymous"></video>
     </a-assets>
-
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-    <a-entity mindar-image-target="targetIndex: 0">
-      <a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat; src: #miVideo"></a-plane>
-    </a-entity>
-    <a-entity mindar-image-target="targetIndex: 1">
-      <a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat; src: #miVideo"></a-plane>
-    </a-entity>
-    <a-entity mindar-image-target="targetIndex: 2">
-      <a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" position="0 0 0" material="shader: flat; src: #miVideo"></a-plane>
-    </a-entity>
+    
+    <a-entity mindar-image-target="targetIndex: 0"><a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" material="shader: flat; src: #miVideo"></a-plane></a-entity>
+    <a-entity mindar-image-target="targetIndex: 1"><a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" material="shader: flat; src: #miVideo"></a-plane></a-entity>
+    <a-entity mindar-image-target="targetIndex: 2"><a-plane src="#miVideo" width="1" height="1.77" rotation="0 0 0" material="shader: flat; src: #miVideo"></a-plane></a-entity>
   </a-scene>
 
   <script>
     const video = document.querySelector('#miVideo');
-    const torchBtn = document.querySelector('#torchBtn');
+    const recordBtn = document.querySelector('#recordBtn');
+    let mediaRecorder;
+    let recordedChunks = [];
 
-    // Forzar inicio al tocar cualquier parte
-    window.addEventListener('click', () => {
-      video.play();
-    }, { once: true });
-
-    // Lógica linterna
-    torchBtn.addEventListener('click', async () => {
-      const stream = await navigator.mediaDevices.getUserMedia({video: {facingMode: "environment"}});
-      const track = stream.getVideoTracks()[0];
-      const cap = track.getCapabilities();
-      if (cap.torch) track.applyConstraints({advanced: [{torch: true}]});
+    // Lógica de Grabación de Pantalla + Cámara (Lo que ve el usuario)
+    recordBtn.addEventListener('click', async () => {
+      if (recordBtn.innerText === "Grabar") {
+        const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
+        mediaRecorder.onstop = exportVideo;
+        mediaRecorder.start();
+        recordBtn.innerText = "Detener";
+      } else {
+        mediaRecorder.stop();
+        recordBtn.innerText = "Grabar";
+      }
     });
+
+    function exportVideo() {
+      const blob = new Blob(recordedChunks, {type: "video/mp4"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "mi_video_ar.mp4";
+      a.click();
+    }
+
+    // Audio: Intentamos desbloquear al primer toque
+    window.addEventListener('click', () => { video.play(); }, { once: true });
   </script>
 </body>
 </html>
