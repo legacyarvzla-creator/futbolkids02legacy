@@ -1,59 +1,49 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AR Experience</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutbolKids AR</title>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: black; }
-        #ui { position: absolute; z-index: 9999; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
-        .btn { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: 2px solid white; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        body { margin: 0; overflow: hidden; }
+        .controls { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; gap: 15px; }
+        button { padding: 15px 30px; border-radius: 25px; border: none; background: rgba(0,0,0,0.7); color: white; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        <button id="recordBtn" class="btn">REC</button>
-        <button id="torchBtn" class="btn">💡</button>
+    <div class="controls">
+        <button onclick="document.querySelector('#miVideo').play()">Reproducir Audio</button>
     </div>
 
-    <video id="miVideo" src="NOMBRE_DEL_VIDEO.mp4" loop playsinline crossorigin="anonymous" style="display:none"></video>
-
     <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" 
-             renderer="colorManagement: true, alpha: true" 
              vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
+        <a-assets>
+            <video id="miVideo" src="FUTBOLKIDS_legacy02.mp4" loop="true" playsinline crossorigin="anonymous" muted="true"></video>
+        </a-assets>
+
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-        
+
         <a-entity id="target" mindar-image-target="targetIndex: 0">
-            <a-video src="#miVideo" width="1" height="1.77" position="0 0 0"></a-video>
+            <a-video src="#miVideo" width="1" height="1.77" position="0 0 0" rotation="0 0 0"></a-video>
         </a-entity>
     </a-scene>
 
     <script>
         const video = document.querySelector('#miVideo');
         const target = document.querySelector('#target');
-        const recordBtn = document.querySelector('#recordBtn');
 
-        target.addEventListener("targetFound", () => { video.play(); });
-        target.addEventListener("targetLost", () => { video.pause(); });
+        // Al detectar, inicia el video en silencio (esto evita el cuadro negro)
+        target.addEventListener("targetFound", () => {
+            video.muted = true;
+            video.play();
+        });
 
-        recordBtn.addEventListener('click', async () => {
-            const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
-            const recorder = new MediaRecorder(stream);
-            let chunks = [];
-            recorder.ondataavailable = e => chunks.push(e.data);
-            recorder.onstop = () => {
-                const blob = new Blob(chunks, {type: 'video/mp4'});
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = 'grabacion_ar.mp4';
-                a.click();
-            };
-            recorder.start();
-            recordBtn.innerText = "STOP";
-            stream.getVideoTracks()[0].onended = () => recorder.stop();
+        target.addEventListener("targetLost", () => {
+            video.pause();
         });
     </script>
 </body>
