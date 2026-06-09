@@ -8,11 +8,16 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
         body { margin: 0; overflow: hidden; background-color: black; }
+        #startOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 20000; background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; text-align: center; }
         #ui { position: absolute; z-index: 9999; bottom: 40px; left: 50%; transform: translateX(-50%); display: flex; gap: 20px; }
         .btn { width: 60px; height: 60px; border-radius: 50%; background: rgba(0,0,0,0.6); color: white; border: 2px solid white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 20px; }
     </style>
 </head>
 <body>
+
+    <div id="startOverlay" onclick="iniciarExperiencia()">
+        <h1>Toca la pantalla<br>para iniciar con audio</h1>
+    </div>
 
     <div id="ui">
         <button id="recordBtn" class="btn">REC</button>
@@ -43,38 +48,45 @@
 
     <script>
         const video = document.querySelector('#miVideo');
-        const target = document.querySelector('#target');
+        const overlay = document.querySelector('#startOverlay');
         const recordBtn = document.querySelector('#recordBtn');
 
+        // Función para activar audio y quitar la pantalla de inicio
+        function iniciarExperiencia() {
+            overlay.style.display = 'none';
+            video.muted = false; 
+            video.play();
+        }
+
         // Activación al encontrar el marcador
-        target.addEventListener("targetFound", () => {
-            video.muted = true;
-            video.play().catch(e => console.log("Espera de interacción"));
+        document.querySelector('#target').addEventListener("targetFound", () => {
+            video.play();
         });
 
-        target.addEventListener("targetLost", () => {
+        document.querySelector('#target').addEventListener("targetLost", () => {
             video.pause();
         });
 
-        // Grabación nativa
+        // Grabación mejorada con soporte de audio
         recordBtn.addEventListener('click', async () => {
             try {
+                // IMPORTANTE: El usuario debe elegir "Compartir audio" en el menú del celular
                 const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
-                const recorder = new MediaRecorder(stream);
+                const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
                 let chunks = [];
                 recorder.ondataavailable = e => chunks.push(e.data);
                 recorder.onstop = () => {
-                    const blob = new Blob(chunks, {type: 'video/mp4'});
+                    const blob = new Blob(chunks, {type: 'video/webm'});
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = 'FutbolKids_Grabacion.mp4';
+                    a.download = 'FutbolKids_Grabacion.webm';
                     a.click();
                 };
                 recorder.start();
-                recordBtn.innerText = "STOP";
+                recordBtn.innerText = "⏹️";
                 stream.getVideoTracks()[0].onended = () => recorder.stop();
-            } catch (err) { alert("Error al grabar: " + err); }
+            } catch (err) { alert("Error: Asegúrate de marcar 'Compartir audio' al grabar."); }
         });
 
         // Linterna
