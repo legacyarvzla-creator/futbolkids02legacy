@@ -68,26 +68,40 @@
         });
 
         // Grabación mejorada con soporte de audio
-        recordBtn.addEventListener('click', async () => {
-            try {
-                // IMPORTANTE: El usuario debe elegir "Compartir audio" en el menú del celular
-                const stream = await navigator.mediaDevices.getDisplayMedia({video: true, audio: true});
-                const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8,opus' });
-                let chunks = [];
-                recorder.ondataavailable = e => chunks.push(e.data);
-                recorder.onstop = () => {
-                    const blob = new Blob(chunks, {type: 'video/webm'});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'FutbolKids_Grabacion.webm';
-                    a.click();
-                };
-                recorder.start();
-                recordBtn.innerText = "⏹️";
-                stream.getVideoTracks()[0].onended = () => recorder.stop();
-            } catch (err) { alert("Error: Asegúrate de marcar 'Compartir audio' al grabar."); }
+        // Grabación simplificada
+recordBtn.addEventListener('click', async () => {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true, 
+            audio: true // Solicitud estándar
         });
+        
+        // Dejamos que el navegador elija el codec compatible automáticamente
+        const recorder = new MediaRecorder(stream);
+        let chunks = [];
+        
+        recorder.ondataavailable = e => chunks.push(e.data);
+        recorder.onstop = () => {
+            const blob = new Blob(chunks, {type: 'video/mp4'}); // Usamos mp4 por defecto
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'FutbolKids_Grabacion.mp4';
+            a.click();
+        };
+        
+        recorder.start();
+        recordBtn.innerText = "⏹️";
+        
+        // Detener grabación al finalizar la sesión de pantalla
+        stream.getVideoTracks()[0].onended = () => recorder.stop();
+        
+    } catch (err) { 
+        console.error(err);
+        alert("Error: Asegúrate de dar permiso de pantalla y audio."); 
+    }
+});
+        
 
         // Linterna
         document.querySelector('#torchBtn').addEventListener('click', async () => {
