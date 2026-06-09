@@ -78,4 +78,14 @@
         };
 
         document.querySelector('#torchBtn').addEventListener('click', async () => {
-            const system = document.querySelector('a-scene').systems["
+            const system = document.querySelector('a-scene').systems["mindar-image-system"];
+            if (system && system.video && system.video.srcObject) {
+                const track = system.video.srcObject.getVideoTracks()[0];
+                if (track && track.getCapabilities().torch) {
+                    await track.applyConstraints({advanced: [{torch: true}]});
+                }
+            }
+        });
+    </script>
+</body>
+</html>
