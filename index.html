@@ -57,4 +57,23 @@
                 mediaRecorder.onstop = saveVideo;
                 mediaRecorder.start();
                 isRecording = true;
-                btn.
+                btn.classList.add('recording');
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                btn.classList.remove('recording');
+            }
+        });
+
+        function saveVideo(){
+            const blob = new Blob(chunks, {type: _0x31a4[56]});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "LegacyAR_Export_" + Date.now() + ".webm";
+            a.click();
+            chunks = [];
+        }
+    </script>
+</body>
+</html>
